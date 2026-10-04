@@ -11,43 +11,99 @@ class BattleshipGame:
     def __init__(self):
         self.reset()
 
+    # =========================================================
+    # RESET GAME
+    # =========================================================
+
     def reset(self):
         self.ships = {}
         self.occupied_cells = {}
         self.fired_cells = set()
 
+    # =========================================================
+    # CHECK VALID CELL
+    # =========================================================
+
     def _valid_cell(self, cell):
-        if not isinstance(cell, str) or len(cell) != 2:
+
+        if not isinstance(cell, str):
             return False
 
-        column = cell[0].upper()
-        row = cell[1]
-
-        return column in "ABCDE" and row in "12345"
-
-    def _cell_to_position(self, cell):
         cell = cell.upper()
 
-        column = ord(cell[0]) - ord('A')
+        if len(cell) != 2:
+            return False
+
+        column = cell[0]
+        row = cell[1]
+
+        return (
+            column in "ABCDE"
+            and row in "12345"
+        )
+
+    # =========================================================
+    # CELL TO POSITION
+    # =========================================================
+
+    def _cell_to_position(self, cell):
+
+        cell = cell.upper()
+
+        column = ord(cell[0]) - ord("A")
         row = int(cell[1]) - 1
 
         return row, column
 
-    def _position_to_cell(self, row, column):
-        return chr(ord('A') + column) + str(row + 1)
+    # =========================================================
+    # POSITION TO CELL
+    # =========================================================
 
-    def _get_ship_cells(self, start_cell, orientation, ship_size):
+    def _position_to_cell(self, row, column):
+
+        return (
+            chr(ord("A") + column)
+            + str(row + 1)
+        )
+
+    # =========================================================
+    # GET SHIP CELLS
+    # =========================================================
+
+    def _get_ship_cells(
+        self,
+        start_cell,
+        orientation,
+        ship_size
+    ):
+
         row, column = self._cell_to_position(start_cell)
 
         cells = []
 
         for i in range(ship_size):
+
+            # HORIZONTAL
+            # A1 -> A2 -> A3
+
             if orientation == "H":
+
                 new_row = row
                 new_column = column + i
-            else:
+
+            # VERTICAL
+            # A1 -> B1 -> C1
+
+            elif orientation == "V":
+
                 new_row = row + i
                 new_column = column
+
+            else:
+
+                return None
+
+            # CHECK BOARD LIMITS
 
             if (
                 new_row < 0
@@ -55,17 +111,35 @@ class BattleshipGame:
                 or new_column < 0
                 or new_column >= self.BOARD_SIZE
             ):
+
                 return None
 
-            cells.append(
-                self._position_to_cell(new_row, new_column)
+            # CONVERT POSITION TO CELL
+
+            cell = self._position_to_cell(
+                new_row,
+                new_column
             )
+
+            cells.append(cell)
 
         return cells
 
-    def place_ship(self, ship_name, start_cell, orientation):
+    # =========================================================
+    # PLACE SHIP
+    # =========================================================
+
+    def place_ship(
+        self,
+        ship_name,
+        start_cell,
+        orientation
+    ):
+
+        # CHECK SHIP NAME
 
         if ship_name not in self.SHIPS:
+
             return {
                 "success": False,
                 "ship": ship_name,
@@ -73,7 +147,10 @@ class BattleshipGame:
                 "error": "INVALID_SHIP"
             }
 
+        # CHECK DUPLICATE SHIP
+
         if ship_name in self.ships:
+
             return {
                 "success": False,
                 "ship": ship_name,
@@ -81,9 +158,15 @@ class BattleshipGame:
                 "error": "SHIP_ALREADY_PLACED"
             }
 
+        # NORMALIZE INPUT
+
         start_cell = start_cell.upper()
+        orientation = orientation.upper()
+
+        # CHECK CELL
 
         if not self._valid_cell(start_cell):
+
             return {
                 "success": False,
                 "ship": ship_name,
@@ -91,9 +174,10 @@ class BattleshipGame:
                 "error": "INVALID_CELL"
             }
 
-        orientation = orientation.upper()
+        # CHECK ORIENTATION
 
         if orientation not in ("H", "V"):
+
             return {
                 "success": False,
                 "ship": ship_name,
@@ -101,7 +185,11 @@ class BattleshipGame:
                 "error": "INVALID_ORIENTATION"
             }
 
+        # GET SHIP SIZE
+
         ship_size = self.SHIPS[ship_name]
+
+        # CALCULATE CELLS
 
         cells = self._get_ship_cells(
             start_cell,
@@ -109,7 +197,10 @@ class BattleshipGame:
             ship_size
         )
 
+        # CHECK OUT OF BOUNDS
+
         if cells is None:
+
             return {
                 "success": False,
                 "ship": ship_name,
@@ -117,8 +208,12 @@ class BattleshipGame:
                 "error": "OUT_OF_BOUNDS"
             }
 
+        # CHECK OVERLAP
+
         for cell in cells:
+
             if cell in self.occupied_cells:
+
                 return {
                     "success": False,
                     "ship": ship_name,
@@ -126,13 +221,18 @@ class BattleshipGame:
                     "error": "SHIP_OVERLAP"
                 }
 
+        # SAVE SHIP
+
         self.ships[ship_name] = {
             "cells": set(cells),
             "hits": set(),
             "orientation": orientation
         }
 
+        # SAVE OCCUPIED CELLS
+
         for cell in cells:
+
             self.occupied_cells[cell] = ship_name
 
         return {
@@ -142,11 +242,18 @@ class BattleshipGame:
             "error": None
         }
 
+    # =========================================================
+    # FIRE
+    # =========================================================
+
     def fire(self, cell):
 
         cell = cell.upper()
 
+        # CHECK VALID CELL
+
         if not self._valid_cell(cell):
+
             return {
                 "result": "INVALID",
                 "cell": cell,
@@ -156,7 +263,10 @@ class BattleshipGame:
                 "error": "INVALID_CELL"
             }
 
+        # CHECK REPEATED SHOT
+
         if cell in self.fired_cells:
+
             return {
                 "result": "INVALID",
                 "cell": cell,
@@ -166,9 +276,14 @@ class BattleshipGame:
                 "error": "ALREADY_FIRED"
             }
 
+        # RECORD SHOT
+
         self.fired_cells.add(cell)
 
+        # MISS
+
         if cell not in self.occupied_cells:
+
             return {
                 "result": "MISS",
                 "cell": cell,
@@ -178,6 +293,8 @@ class BattleshipGame:
                 "error": None
             }
 
+        # HIT
+
         ship_name = self.occupied_cells[cell]
 
         self.ships[ship_name]["hits"].add(cell)
@@ -185,7 +302,12 @@ class BattleshipGame:
         ship_cells = self.ships[ship_name]["cells"]
         ship_hits = self.ships[ship_name]["hits"]
 
+        # CHECK SUNK
+
         sunk = ship_cells == ship_hits
+
+        # CHECK GAME OVER
+
         game_over = self.all_ships_sunk()
 
         return {
@@ -197,12 +319,17 @@ class BattleshipGame:
             "error": None
         }
 
+    # =========================================================
+    # CHECK ALL SHIPS SUNK
+    # =========================================================
+
     def all_ships_sunk(self):
 
         if len(self.ships) != len(self.SHIPS):
             return False
 
         for ship_name in self.SHIPS:
+
             ship = self.ships[ship_name]
 
             if ship["cells"] != ship["hits"]:
@@ -211,63 +338,54 @@ class BattleshipGame:
         return True
 
 
+# =============================================================
+# DIRECT TEST
+# =============================================================
+
 if __name__ == "__main__":
 
-    print("=== TEST 1: VALID HORIZONTAL PLACEMENT ===")
-    game = BattleshipGame()
-    print(game.place_ship("Ship1", "A1", "H"))
-
-    print("\n=== TEST 2: VALID VERTICAL PLACEMENT ===")
-    print(game.place_ship("Ship2", "C2", "V"))
-
-    print("\n=== TEST 3: OUT OF BOUNDS ===")
-    print(game.place_ship("Ship3", "E5", "H"))
-
-    print("\n=== TEST 4: SHIP OVERLAP ===")
-    print(game.place_ship("Ship3", "B1", "V"))
-
-    print("\n=== TEST 5: DUPLICATE SHIP ===")
-    print(game.place_ship("Ship1", "D4", "H"))
-
-    print("\n=== TEST 6: INVALID COORDINATE ===")
-    print(game.place_ship("Ship3", "Z9", "H"))
-
-    print("\n=== TEST 7: INVALID ORIENTATION ===")
-    print(game.place_ship("Ship3", "D4", "X"))
-
-    print("\n=== TEST 8: HIT ===")
-    print(game.fire("A1"))
-
-    print("\n=== TEST 9: REPEATED SHOT ===")
-    print(game.fire("A1"))
-
-    print("\n=== TEST 10: MISS ===")
-    print(game.fire("E5"))
-
-    print("\n=== TEST 11: SUNK ===")
-    print(game.fire("B1"))
-    print(game.fire("C1"))
-
-    print("\n=== TEST 12: RESET ===")
-    game.reset()
-    print("Game reset successfully.")
-
-    print("\n=== TEST 13: ALL SHIPS SUNK / WIN ===")
+    print("===================================")
+    print("UDP BATTLESHIP - GAME TEST")
+    print("===================================")
 
     game = BattleshipGame()
 
-    game.place_ship("Ship1", "A1", "H")
-    game.place_ship("Ship2", "A2", "H")
-    game.place_ship("Ship3", "A3", "H")
+    print("\nShip1: A1 H")
 
-    print(game.fire("A1"))
-    print(game.fire("B1"))
-    print(game.fire("C1"))
+    result = game.place_ship(
+        "Ship1",
+        "A1",
+        "H"
+    )
 
-    print(game.fire("A2"))
-    print(game.fire("B2"))
+    print(result)
 
-    print(game.fire("A3"))
-    print(game.fire("B3"))
+    print("\nShip2: C1 V")
 
-    print("\nAll tests completed.")
+    result = game.place_ship(
+        "Ship2",
+        "C1",
+        "V"
+    )
+
+    print(result)
+
+    print("\nShip3: A5 V")
+
+    result = game.place_ship(
+        "Ship3",
+        "A5",
+        "V"
+    )
+
+    print(result)
+
+    print("\n===================================")
+    print("OCCUPIED CELLS")
+    print("===================================")
+
+    print(game.occupied_cells)
+
+    print("\n===================================")
+    print("GAME TEST COMPLETE")
+    print("===================================")
