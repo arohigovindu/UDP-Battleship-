@@ -161,6 +161,31 @@ class BattleshipGUI:
             padx=5
         )
 
+        tk.Label(
+            connection_frame,
+            text="Server IP:"
+        ).grid(
+            row=0,
+            column=2,
+            padx=5
+        )
+
+        self.server_ip_entry = tk.Entry(
+            connection_frame,
+            width=18
+        )
+
+        self.server_ip_entry.insert(
+            0,
+            "127.0.0.1"
+        )
+
+        self.server_ip_entry.grid(
+            row=0,
+            column=3,
+            padx=5
+        )
+
         self.connect_button = tk.Button(
             connection_frame,
             text="Connect",
@@ -170,7 +195,7 @@ class BattleshipGUI:
 
         self.connect_button.grid(
             row=0,
-            column=2,
+            column=4,
             padx=5
         )
 
@@ -182,7 +207,7 @@ class BattleshipGUI:
 
         self.player_label.grid(
             row=0,
-            column=3,
+            column=5,
             padx=15
         )
 
@@ -525,6 +550,7 @@ class BattleshipGUI:
     def connect(self):
 
         name = self.name_entry.get().strip()
+        server_ip = self.server_ip_entry.get().strip()
 
         if not name:
 
@@ -535,8 +561,20 @@ class BattleshipGUI:
 
             return
 
+        if not server_ip:
+
+            messagebox.showwarning(
+                "Server IP Required",
+                "Please enter the server IP address."
+            )
+
+            return
+
+        # Use the IP entered in the GUI before sending JOIN.
+        self.client.host = server_ip
+
         self.status_label.config(
-            text="Connecting to UDP server..."
+            text=f"Connecting to {server_ip}:5000..."
         )
 
         self.connect_button.config(
