@@ -5,7 +5,8 @@ from client import BattleshipClient
 
 
 # ============================================================
-# CONSTANTS
+# UDP BATTLESHIP
+# COMPLETE GAME-STYLE GUI
 # ============================================================
 
 BOARD_SIZE = 5
@@ -18,7 +19,38 @@ SHIPS = {
 
 
 # ============================================================
-# BATTLESHIP GUI
+# DARK NAVY + TEAL THEME
+# ============================================================
+
+BG = "#071A2B"
+PANEL = "#0B2438"
+PANEL_LIGHT = "#10344A"
+
+TEAL = "#18D6C5"
+TEAL_DARK = "#0E9F96"
+TEAL_LIGHT = "#7FFFEF"
+
+WHITE = "#F4FAFA"
+TEXT = "#C9D9DE"
+MUTED = "#718A96"
+
+GRID = "#16445A"
+GRID_HOVER = "#1E6277"
+
+WATER = "#09263A"
+SHIP = "#147F7A"
+SHIP_LIGHT = "#55E0D4"
+
+HIT = "#FF5C5C"
+MISS = "#5FA8C5"
+SELECTED = "#D6B84C"
+
+SUCCESS = "#49D17D"
+WARNING = "#F0B44D"
+
+
+# ============================================================
+# MAIN GUI
 # ============================================================
 
 class BattleshipGUI:
@@ -29,22 +61,26 @@ class BattleshipGUI:
 
         self.root.title("UDP Battleship")
 
-        self.root.geometry("1150x800")
+        self.root.geometry("1250x900")
 
-        self.root.resizable(False, False)
+        self.root.minsize(1150, 820)
 
-        # ----------------------------------------------------
+        self.root.configure(
+            bg=BG
+        )
+
+        # ====================================================
         # UDP CLIENT
-        # ----------------------------------------------------
+        # ====================================================
 
         self.client = BattleshipClient(
             host="127.0.0.1",
             port=5000
         )
 
-        # ----------------------------------------------------
-        # CONNECTION STATE
-        # ----------------------------------------------------
+        # ====================================================
+        # CONNECTION / GAME STATE
+        # ====================================================
 
         self.player_id = None
 
@@ -56,9 +92,9 @@ class BattleshipGUI:
 
         self.current_turn = None
 
-        # ----------------------------------------------------
+        # ====================================================
         # SHIP STATE
-        # ----------------------------------------------------
+        # ====================================================
 
         self.placed_ships = set()
 
@@ -68,17 +104,17 @@ class BattleshipGUI:
 
         self.pending_cells = []
 
-        # ----------------------------------------------------
+        # ====================================================
         # BOARD STATE
-        # ----------------------------------------------------
+        # ====================================================
 
         self.own_cells = {}
 
         self.enemy_cells = {}
 
-        # ----------------------------------------------------
-        # CALLBACK STATE
-        # ----------------------------------------------------
+        # ====================================================
+        # CLIENT CALLBACKS
+        # ====================================================
 
         self.client.on_welcome = self.handle_welcome
 
@@ -108,15 +144,15 @@ class BattleshipGUI:
             self.network_log
         )
 
-        # ----------------------------------------------------
+        # ====================================================
         # BUILD GUI
-        # ----------------------------------------------------
+        # ====================================================
 
         self.build_gui()
 
-        # ----------------------------------------------------
+        # ====================================================
         # WINDOW CLOSE
-        # ----------------------------------------------------
+        # ====================================================
 
         self.root.protocol(
             "WM_DELETE_WINDOW",
@@ -130,57 +166,107 @@ class BattleshipGUI:
 
     def build_gui(self):
 
-        # ----------------------------------------------------
-        # TITLE
-        # ----------------------------------------------------
+        # ====================================================
+        # HEADER
+        # ====================================================
 
-        title = tk.Label(
+        header = tk.Frame(
             self.root,
-            text="UDP BATTLESHIP",
-            font=("Arial", 24, "bold")
+            bg=BG
         )
 
-        title.pack(
+        header.pack(
+            fill="x",
+            padx=30,
+            pady=(18, 5)
+        )
+
+        title = tk.Label(
+            header,
+            text="UDP BATTLESHIP",
+            font=("Arial", 28, "bold"),
+            fg=TEAL,
+            bg=BG
+        )
+
+        title.pack()
+
+        subtitle = tk.Label(
+            header,
+            text="REAL-TIME NAVAL COMBAT  •  UDP NETWORK",
+            font=("Arial", 9, "bold"),
+            fg=MUTED,
+            bg=BG
+        )
+
+        subtitle.pack(
+            pady=(2, 0)
+        )
+
+        # ====================================================
+        # CONNECTION PANEL
+        # ====================================================
+
+        connection = tk.Frame(
+            self.root,
+            bg=PANEL,
+            highlightbackground=GRID,
+            highlightthickness=1
+        )
+
+        connection.pack(
+            fill="x",
+            padx=30,
             pady=10
         )
 
-        # ----------------------------------------------------
-        # CONNECTION FRAME
-        # ----------------------------------------------------
-
-        connection_frame = tk.Frame(
-            self.root
+        connection_inner = tk.Frame(
+            connection,
+            bg=PANEL
         )
 
-        connection_frame.pack(
-            pady=5
+        connection_inner.pack(
+            pady=10
         )
 
         tk.Label(
-            connection_frame,
-            text="Player Name:",
-            font=("Arial", 11)
+            connection_inner,
+            text="CALLSIGN",
+            font=("Arial", 9, "bold"),
+            fg=MUTED,
+            bg=PANEL
         ).grid(
             row=0,
             column=0,
-            padx=5
+            padx=(10, 5)
         )
 
         self.name_entry = tk.Entry(
-            connection_frame,
-            width=20,
-            font=("Arial", 11)
+            connection_inner,
+            width=18,
+            font=("Arial", 11),
+            bg="#061522",
+            fg=WHITE,
+            insertbackground=TEAL,
+            relief="flat"
         )
 
         self.name_entry.grid(
             row=0,
             column=1,
-            padx=5
+            padx=5,
+            ipady=5
         )
 
         self.connect_button = tk.Button(
-            connection_frame,
-            text="Connect",
+            connection_inner,
+            text="CONNECT",
+            font=("Arial", 9, "bold"),
+            fg=BG,
+            bg=TEAL,
+            activebackground=TEAL_LIGHT,
+            activeforeground=BG,
+            relief="flat",
             width=12,
             command=self.connect
         )
@@ -188,114 +274,266 @@ class BattleshipGUI:
         self.connect_button.grid(
             row=0,
             column=2,
-            padx=5
+            padx=10,
+            ipady=3
         )
 
         self.player_label = tk.Label(
-            connection_frame,
-            text="Not connected",
-            font=("Arial", 11, "bold")
+            connection_inner,
+            text="PLAYER: --",
+            font=("Arial", 10, "bold"),
+            fg=TEXT,
+            bg=PANEL
         )
 
         self.player_label.grid(
             row=0,
             column=3,
-            padx=15
+            padx=20
         )
 
-        # ----------------------------------------------------
-        # STATUS
-        # ----------------------------------------------------
+        self.connection_status = tk.Label(
+            connection_inner,
+            text="● OFFLINE",
+            font=("Arial", 10, "bold"),
+            fg=MUTED,
+            bg=PANEL
+        )
+
+        self.connection_status.grid(
+            row=0,
+            column=4,
+            padx=10
+        )
+
+        # ====================================================
+        # MAIN STATUS
+        # ====================================================
+
+        self.status_frame = tk.Frame(
+            self.root,
+            bg=PANEL_LIGHT,
+            highlightbackground=GRID,
+            highlightthickness=1
+        )
+
+        self.status_frame.pack(
+            fill="x",
+            padx=30,
+            pady=(5, 10)
+        )
 
         self.status_label = tk.Label(
-            self.root,
-            text="Welcome to UDP Battleship.",
-            font=("Arial", 12)
+            self.status_frame,
+            text="Welcome, Captain. Connect to the UDP server.",
+            font=("Arial", 12, "bold"),
+            fg=WHITE,
+            bg=PANEL_LIGHT
         )
 
         self.status_label.pack(
+            pady=9
+        )
+
+        # ====================================================
+        # BOARDS CONTAINER
+        # ====================================================
+
+        boards_container = tk.Frame(
+            self.root,
+            bg=BG
+        )
+
+        boards_container.pack(
             pady=5
         )
 
-        # ----------------------------------------------------
-        # BOARDS
-        # ----------------------------------------------------
+        # ====================================================
+        # YOUR FLEET
+        # ====================================================
 
-        boards_frame = tk.Frame(
-            self.root
+        own_panel = tk.Frame(
+            boards_container,
+            bg=PANEL,
+            highlightbackground=TEAL_DARK,
+            highlightthickness=1
         )
 
-        boards_frame.pack(
-            pady=10
-        )
-
-        # ----------------------------------------------------
-        # OWN BOARD
-        # ----------------------------------------------------
-
-        own_frame = tk.LabelFrame(
-            boards_frame,
-            text="Your Board",
-            font=("Arial", 12, "bold"),
-            padx=10,
-            pady=10
-        )
-
-        own_frame.grid(
+        own_panel.grid(
             row=0,
             column=0,
-            padx=30
+            padx=18
+        )
+
+        tk.Label(
+            own_panel,
+            text="YOUR FLEET",
+            font=("Arial", 15, "bold"),
+            fg=TEAL,
+            bg=PANEL
+        ).pack(
+            pady=(10, 0)
+        )
+
+        tk.Label(
+            own_panel,
+            text="DEFEND YOUR FLEET",
+            font=("Arial", 8, "bold"),
+            fg=MUTED,
+            bg=PANEL
+        ).pack(
+            pady=(1, 8)
         )
 
         self.own_board = self.create_board(
-            own_frame,
+            own_panel,
             self.own_cell_clicked
         )
 
-        # ----------------------------------------------------
-        # ENEMY BOARD
-        # ----------------------------------------------------
+        # ====================================================
+        # VS
+        # ====================================================
 
-        enemy_frame = tk.LabelFrame(
-            boards_frame,
-            text="Opponent Board",
-            font=("Arial", 12, "bold"),
-            padx=10,
-            pady=10
+        vs_frame = tk.Frame(
+            boards_container,
+            bg=BG
         )
 
-        enemy_frame.grid(
+        vs_frame.grid(
             row=0,
             column=1,
-            padx=30
+            padx=5
+        )
+
+        tk.Label(
+            vs_frame,
+            text="VS",
+            font=("Arial", 18, "bold"),
+            fg=MUTED,
+            bg=BG
+        ).pack()
+
+        # ====================================================
+        # ENEMY FLEET
+        # ====================================================
+
+        enemy_panel = tk.Frame(
+            boards_container,
+            bg=PANEL,
+            highlightbackground=TEAL_DARK,
+            highlightthickness=1
+        )
+
+        enemy_panel.grid(
+            row=0,
+            column=2,
+            padx=18
+        )
+
+        tk.Label(
+            enemy_panel,
+            text="ENEMY FLEET",
+            font=("Arial", 15, "bold"),
+            fg=TEAL,
+            bg=PANEL
+        ).pack(
+            pady=(10, 0)
+        )
+
+        tk.Label(
+            enemy_panel,
+            text="SELECT YOUR TARGET",
+            font=("Arial", 8, "bold"),
+            fg=MUTED,
+            bg=PANEL
+        ).pack(
+            pady=(1, 8)
         )
 
         self.enemy_board = self.create_board(
-            enemy_frame,
+            enemy_panel,
             self.enemy_cell_clicked
         )
 
-        # ----------------------------------------------------
-        # SHIP CONTROLS
-        # ----------------------------------------------------
+        # ====================================================
+        # TURN INDICATOR
+        # ====================================================
 
-        controls = tk.LabelFrame(
+        self.turn_frame = tk.Frame(
             self.root,
-            text="Ship Placement",
-            font=("Arial", 11, "bold"),
-            padx=15,
-            pady=10
+            bg=PANEL,
+            highlightbackground=GRID,
+            highlightthickness=1
+        )
+
+        self.turn_frame.pack(
+            fill="x",
+            padx=170,
+            pady=12
+        )
+
+        self.turn_label = tk.Label(
+            self.turn_frame,
+            text="WAITING FOR PLAYERS",
+            font=("Arial", 17, "bold"),
+            fg=MUTED,
+            bg=PANEL
+        )
+
+        self.turn_label.pack(
+            pady=(8, 1)
+        )
+
+        self.turn_subtitle = tk.Label(
+            self.turn_frame,
+            text="Connect both players to begin.",
+            font=("Arial", 9),
+            fg=MUTED,
+            bg=PANEL
+        )
+
+        self.turn_subtitle.pack(
+            pady=(0, 8)
+        )
+
+        # ====================================================
+        # FLEET DEPLOYMENT
+        # ====================================================
+
+        controls = tk.Frame(
+            self.root,
+            bg=PANEL,
+            highlightbackground=GRID,
+            highlightthickness=1
         )
 
         controls.pack(
+            fill="x",
+            padx=30,
             pady=5
         )
 
         tk.Label(
             controls,
-            text="Ship:"
+            text="FLEET DEPLOYMENT",
+            font=("Arial", 10, "bold"),
+            fg=TEAL,
+            bg=PANEL
         ).grid(
             row=0,
+            column=0,
+            columnspan=6,
+            pady=(8, 5)
+        )
+
+        tk.Label(
+            controls,
+            text="SHIP",
+            font=("Arial", 8, "bold"),
+            fg=MUTED,
+            bg=PANEL
+        ).grid(
+            row=1,
             column=0,
             padx=5
         )
@@ -310,17 +548,36 @@ class BattleshipGUI:
             *SHIPS.keys()
         )
 
+        self.ship_menu.config(
+            bg="#09263A",
+            fg=WHITE,
+            activebackground=GRID_HOVER,
+            activeforeground=WHITE,
+            relief="flat",
+            width=10
+        )
+
+        self.ship_menu["menu"].config(
+            bg="#09263A",
+            fg=WHITE,
+            activebackground=TEAL_DARK,
+            activeforeground=WHITE
+        )
+
         self.ship_menu.grid(
-            row=0,
+            row=1,
             column=1,
             padx=5
         )
 
         tk.Label(
             controls,
-            text="Orientation:"
+            text="DIRECTION",
+            font=("Arial", 8, "bold"),
+            fg=MUTED,
+            bg=PANEL
         ).grid(
-            row=0,
+            row=1,
             column=2,
             padx=5
         )
@@ -336,113 +593,141 @@ class BattleshipGUI:
             "V"
         )
 
+        self.orientation_menu.config(
+            bg="#09263A",
+            fg=WHITE,
+            activebackground=GRID_HOVER,
+            activeforeground=WHITE,
+            relief="flat",
+            width=8
+        )
+
+        self.orientation_menu["menu"].config(
+            bg="#09263A",
+            fg=WHITE,
+            activebackground=TEAL_DARK,
+            activeforeground=WHITE
+        )
+
         self.orientation_menu.grid(
-            row=0,
+            row=1,
             column=3,
             padx=5
         )
 
         self.place_button = tk.Button(
             controls,
-            text="Place Ship",
-            width=13,
+            text="DEPLOY SHIP",
+            font=("Arial", 9, "bold"),
+            fg=BG,
+            bg=TEAL,
+            activebackground=TEAL_LIGHT,
+            relief="flat",
+            width=15,
             command=self.place_selected_ship
         )
 
         self.place_button.grid(
-            row=0,
+            row=1,
             column=4,
-            padx=10
+            padx=10,
+            ipady=3
         )
 
         self.ready_button = tk.Button(
             controls,
             text="READY",
-            width=13,
-            command=self.ready,
-            state="disabled"
+            font=("Arial", 9, "bold"),
+            fg=WHITE,
+            bg=TEAL_DARK,
+            activebackground=TEAL,
+            relief="flat",
+            width=15,
+            state="disabled",
+            command=self.ready
         )
 
         self.ready_button.grid(
-            row=0,
+            row=1,
             column=5,
-            padx=10
+            padx=10,
+            ipady=3
         )
-
-        # ----------------------------------------------------
-        # PLACEMENT INFORMATION
-        # ----------------------------------------------------
 
         self.placement_label = tk.Label(
-            self.root,
-            text="Place all 3 ships.",
-            font=("Arial", 11)
+            controls,
+            text="0 / 3 SHIPS DEPLOYED",
+            font=("Arial", 9, "bold"),
+            fg=MUTED,
+            bg=PANEL
         )
 
-        self.placement_label.pack(
-            pady=3
+        self.placement_label.grid(
+            row=2,
+            column=0,
+            columnspan=6,
+            pady=(6, 9)
         )
 
-        # ----------------------------------------------------
-        # TURN
-        # ----------------------------------------------------
-
-        self.turn_label = tk.Label(
-            self.root,
-            text="Waiting for players...",
-            font=("Arial", 13, "bold")
-        )
-
-        self.turn_label.pack(
-            pady=5
-        )
-
-        # ----------------------------------------------------
+        # ====================================================
         # NETWORK LOG
-        # ----------------------------------------------------
+        # ====================================================
 
-        log_frame = tk.LabelFrame(
+        log_panel = tk.Frame(
             self.root,
-            text="UDP Network Activity",
-            font=("Arial", 10, "bold"),
-            padx=5,
-            pady=5
+            bg=PANEL,
+            highlightbackground=GRID,
+            highlightthickness=1
         )
 
-        log_frame.pack(
+        log_panel.pack(
+            fill="x",
             padx=30,
-            pady=8,
-            fill="x"
+            pady=(8, 15)
+        )
+
+        tk.Label(
+            log_panel,
+            text="NETWORK ACTIVITY",
+            font=("Arial", 8, "bold"),
+            fg=TEAL,
+            bg=PANEL
+        ).pack(
+            anchor="w",
+            padx=8,
+            pady=(5, 2)
         )
 
         self.log_text = tk.Text(
-            log_frame,
-            height=9,
-            width=125,
-            state="disabled"
+            log_panel,
+            height=6,
+            bg="#061522",
+            fg="#8FAEB8",
+            insertbackground=TEAL,
+            relief="flat",
+            state="disabled",
+            font=("Courier", 8)
         )
 
         self.log_text.pack(
-            side="left"
-        )
-
-        scrollbar = tk.Scrollbar(
-            log_frame,
-            command=self.log_text.yview
-        )
-
-        scrollbar.pack(
-            side="right",
-            fill="y"
-        )
-
-        self.log_text.config(
-            yscrollcommand=scrollbar.set
+            fill="x",
+            padx=7,
+            pady=(0, 7)
         )
 
 
     # ========================================================
-    # CREATE 5x5 BOARD
+    # CREATE BOARD
+    #
+    # IMPORTANT:
+    # The title/subtitle use PACK in the parent.
+    # The actual board gets its own child frame and uses GRID.
+    #
+    # This completely fixes:
+    #
+    # TclError:
+    # cannot use geometry manager grid inside ... which
+    # already has slaves managed by pack
     # ========================================================
 
     def create_board(
@@ -451,42 +736,58 @@ class BattleshipGUI:
         callback
     ):
 
+        board_frame = tk.Frame(
+            parent,
+            bg=PANEL
+        )
+
+        board_frame.pack(
+            padx=10,
+            pady=(0, 12)
+        )
+
         board = {}
 
-        # ----------------------------------------------------
-        # COLUMN LABELS
-        # ----------------------------------------------------
+        # ====================================================
+        # COLUMN HEADERS
+        # ====================================================
 
         for col in range(BOARD_SIZE):
 
             label = tk.Label(
-                parent,
+                board_frame,
                 text=chr(ord("A") + col),
-                width=7,
-                font=("Arial", 10, "bold")
+                width=5,
+                font=("Arial", 9, "bold"),
+                fg=MUTED,
+                bg=PANEL
             )
 
             label.grid(
                 row=0,
-                column=col + 1
+                column=col + 1,
+                pady=(0, 4)
             )
 
-        # ----------------------------------------------------
-        # ROW LABELS AND BUTTONS
-        # ----------------------------------------------------
+        # ====================================================
+        # ROWS AND CELLS
+        # ====================================================
 
         for row in range(BOARD_SIZE):
 
-            label = tk.Label(
-                parent,
+            row_label = tk.Label(
+                board_frame,
                 text=str(row + 1),
-                width=3,
-                font=("Arial", 10, "bold")
+                width=2,
+                font=("Arial", 9, "bold"),
+                fg=MUTED,
+                bg=PANEL
             )
 
-            label.grid(
+            row_label.grid(
                 row=row + 1,
-                column=0
+                column=0,
+                padx=(0, 4)
             )
 
             for col in range(BOARD_SIZE):
@@ -497,18 +798,26 @@ class BattleshipGUI:
                 )
 
                 button = tk.Button(
-                    parent,
+                    board_frame,
                     text="",
-                    width=7,
+                    width=5,
                     height=2,
+                    bg=WATER,
+                    fg=WHITE,
+                    activebackground=GRID_HOVER,
+                    activeforeground=WHITE,
+                    relief="flat",
+                    highlightbackground=GRID,
+                    highlightthickness=1,
+                    font=("Arial", 12, "bold"),
                     command=lambda c=cell: callback(c)
                 )
 
                 button.grid(
                     row=row + 1,
                     column=col + 1,
-                    padx=1,
-                    pady=1
+                    padx=2,
+                    pady=2
                 )
 
                 board[cell] = button
@@ -549,7 +858,7 @@ class BattleshipGUI:
 
         self.log_text.insert(
             "end",
-            message + "\n"
+            str(message) + "\n"
         )
 
         self.log_text.see(
@@ -572,8 +881,8 @@ class BattleshipGUI:
         if not name:
 
             messagebox.showwarning(
-                "Name Required",
-                "Please enter your name."
+                "Callsign Required",
+                "Enter your player name first."
             )
 
             return
@@ -590,11 +899,21 @@ class BattleshipGUI:
             text="Connecting to UDP server..."
         )
 
-        success = self.client.connect(
-            name
-        )
+        try:
 
-        if not success:
+            success = self.client.connect(
+                name
+            )
+
+        except Exception as e:
+
+            success = False
+
+            self.network_log(
+                f"Client connection error: {e}"
+            )
+
+        if success is False:
 
             self.connect_button.config(
                 state="normal"
@@ -605,12 +924,12 @@ class BattleshipGUI:
             )
 
             self.status_label.config(
-                text="Failed to send JOIN."
+                text="Unable to contact UDP server."
             )
 
 
     # ========================================================
-    # WELCOME FROM SERVER
+    # WELCOME
     # ========================================================
 
     def handle_welcome(
@@ -635,15 +954,20 @@ class BattleshipGUI:
         self.connected = True
 
         self.player_label.config(
-            text=f"You are {player_id}"
+            text=f"PLAYER: {player_id}"
+        )
+
+        self.connection_status.config(
+            text="● ONLINE",
+            fg=SUCCESS
         )
 
         self.status_label.config(
-            text="Connected. Place your ships."
+            text="Connection established. Deploy your fleet."
         )
 
         self.placement_label.config(
-            text="Place Ship1, Ship2 and Ship3."
+            text="0 / 3 SHIPS DEPLOYED"
         )
 
 
@@ -657,25 +981,34 @@ class BattleshipGUI:
     ):
 
         if not self.connected:
-
             return
 
         if self.game_started:
-
             return
 
         if self.ready_sent:
+            return
 
+        if cell in self.own_cells:
             return
 
         self.selected_start_cell = cell
 
         self.status_label.config(
-            text=f"Selected starting cell: {cell}"
+            text=f"Starting position selected: {cell}"
         )
 
-        self.placement_label.config(
-            text=f"Selected {cell}. Choose ship/orientation and click Place Ship."
+        # Reset unoccupied cells
+        for cell_name, button in self.own_board.items():
+
+            if cell_name not in self.own_cells:
+
+                button.config(
+                    bg=WATER
+                )
+
+        self.own_board[cell].config(
+            bg=SELECTED
         )
 
 
@@ -690,15 +1023,19 @@ class BattleshipGUI:
         size
     ):
 
+        if not start_cell or len(start_cell) != 2:
+            return None
+
         try:
 
             column = (
-                ord(start_cell[0]) -
-                ord("A")
+                ord(start_cell[0].upper())
+                - ord("A")
             )
 
             row = (
-                int(start_cell[1]) - 1
+                int(start_cell[1])
+                - 1
             )
 
         except (ValueError, IndexError):
@@ -736,12 +1073,15 @@ class BattleshipGUI:
 
             cell = (
                 chr(
-                    ord("A") + new_column
+                    ord("A")
+                    + new_column
                 )
                 + str(new_row + 1)
             )
 
-            cells.append(cell)
+            cells.append(
+                cell
+            )
 
         return cells
 
@@ -762,23 +1102,16 @@ class BattleshipGUI:
             return
 
         if self.game_started:
-
-            messagebox.showwarning(
-                "Game Started",
-                "Ships can no longer be placed."
-            )
-
             return
 
         if self.ready_sent:
-
             return
 
         if self.selected_start_cell is None:
 
             messagebox.showwarning(
-                "Select Starting Cell",
-                "Click a cell on your board first."
+                "Select Position",
+                "Click a starting cell on YOUR FLEET."
             )
 
             return
@@ -789,35 +1122,14 @@ class BattleshipGUI:
             self.orientation_var.get().upper()
         )
 
-        # ----------------------------------------------------
-        # MAKE SURE SHIP EXISTS
-        # ----------------------------------------------------
-
-        if ship not in SHIPS:
-
-            messagebox.showwarning(
-                "Invalid Ship",
-                "Please select a valid ship."
-            )
-
-            return
-
-        # ----------------------------------------------------
-        # DON'T PLACE SAME SHIP TWICE
-        # ----------------------------------------------------
-
         if ship in self.placed_ships:
 
             messagebox.showwarning(
-                "Ship Already Placed",
-                f"{ship} has already been placed."
+                "Already Deployed",
+                f"{ship} is already deployed."
             )
 
             return
-
-        # ----------------------------------------------------
-        # CALCULATE LOCAL CELLS
-        # ----------------------------------------------------
 
         cells = self.calculate_ship_cells(
             self.selected_start_cell,
@@ -828,38 +1140,34 @@ class BattleshipGUI:
         if cells is None:
 
             messagebox.showerror(
-                "Invalid Placement",
-                "The ship goes outside the 5x5 board."
+                "Out of Bounds",
+                "That ship does not fit on the board."
             )
 
             return
 
-        # ----------------------------------------------------
+        # ====================================================
         # LOCAL OVERLAP CHECK
-        # ----------------------------------------------------
+        # ====================================================
 
         for cell in cells:
 
             if cell in self.own_cells:
 
                 messagebox.showerror(
-                    "Invalid Placement",
-                    f"The ship overlaps at {cell}."
+                    "Fleet Overlap",
+                    f"Another ship already occupies {cell}."
                 )
 
                 return
 
-        # ----------------------------------------------------
-        # SAVE PENDING PLACEMENT
-        # ----------------------------------------------------
+        # ====================================================
+        # SAVE PENDING SHIP
+        # ====================================================
 
         self.pending_ship = ship
 
         self.pending_cells = cells
-
-        # ----------------------------------------------------
-        # DISABLE PLACE BUTTON WHILE WAITING
-        # ----------------------------------------------------
 
         self.place_button.config(
             state="disabled"
@@ -867,26 +1175,44 @@ class BattleshipGUI:
 
         self.status_label.config(
             text=(
-                f"Requesting placement: "
-                f"{ship} at "
-                f"{self.selected_start_cell} "
-                f"({orientation})"
+                f"Deploying {ship} "
+                f"from {self.selected_start_cell}..."
             )
         )
 
-        # ----------------------------------------------------
+        # ====================================================
         # SEND UDP REQUEST
-        # ----------------------------------------------------
+        # ====================================================
 
-        self.client.place_ship(
-            ship,
-            self.selected_start_cell,
-            orientation
-        )
+        try:
+
+            self.client.place_ship(
+                ship,
+                self.selected_start_cell,
+                orientation
+            )
+
+        except Exception as e:
+
+            self.pending_ship = None
+
+            self.pending_cells = []
+
+            self.place_button.config(
+                state="normal"
+            )
+
+            self.status_label.config(
+                text="Unable to send placement request."
+            )
+
+            self.network_log(
+                f"Placement error: {e}"
+            )
 
 
     # ========================================================
-    # SERVER PLACEMENT RESULT
+    # PLACE RESULT
     # ========================================================
 
     def handle_place_result(
@@ -909,10 +1235,6 @@ class BattleshipGUI:
         error
     ):
 
-        # ----------------------------------------------------
-        # SERVER ACCEPTED
-        # ----------------------------------------------------
-
         if success:
 
             ship = self.pending_ship
@@ -920,10 +1242,6 @@ class BattleshipGUI:
             cells = list(
                 self.pending_cells
             )
-
-            # -----------------------------------------------
-            # SAFETY CHECK
-            # -----------------------------------------------
 
             if ship is None:
 
@@ -933,30 +1251,28 @@ class BattleshipGUI:
 
                 return
 
-            # -----------------------------------------------
-            # RECORD SHIP
-            # -----------------------------------------------
+            # =================================================
+            # CONFIRM SHIP
+            # =================================================
 
             self.placed_ships.add(
                 ship
             )
-
-            # -----------------------------------------------
-            # RECORD CELLS
-            # -----------------------------------------------
 
             for cell in cells:
 
                 self.own_cells[cell] = ship
 
                 self.own_board[cell].config(
-                    text=ship,
+                    text="▰",
+                    fg=SHIP_LIGHT,
+                    bg=SHIP,
                     state="disabled"
                 )
 
-            # -----------------------------------------------
+            # =================================================
             # CLEAR PENDING
-            # -----------------------------------------------
+            # =================================================
 
             self.pending_ship = None
 
@@ -964,32 +1280,34 @@ class BattleshipGUI:
 
             self.selected_start_cell = None
 
-            # -----------------------------------------------
-            # UPDATE UI
-            # -----------------------------------------------
+            # =================================================
+            # UPDATE COUNT
+            # =================================================
 
-            self.status_label.config(
-                text=f"{ship} successfully placed."
+            count = len(
+                self.placed_ships
             )
 
             self.placement_label.config(
-                text=(
-                    f"{len(self.placed_ships)}/3 ships placed."
-                )
+                text=f"{count} / 3 SHIPS DEPLOYED"
             )
 
-            # -----------------------------------------------
-            # ENABLE / DISABLE READY
-            # -----------------------------------------------
+            self.status_label.config(
+                text=f"{ship} successfully deployed."
+            )
 
-            if len(self.placed_ships) == len(SHIPS):
+            # =================================================
+            # ALL SHIPS DEPLOYED
+            # =================================================
 
-                self.ready_button.config(
-                    state="normal"
-                )
+            if count == len(SHIPS):
 
                 self.place_button.config(
                     state="disabled"
+                )
+
+                self.ready_button.config(
+                    state="normal"
                 )
 
                 self.ship_menu.config(
@@ -1001,17 +1319,12 @@ class BattleshipGUI:
                 )
 
                 self.placement_label.config(
-                    text=(
-                        "All 3 ships placed. "
-                        "Click READY."
-                    )
+                    text="3 / 3 SHIPS DEPLOYED • READY FOR BATTLE"
                 )
 
                 self.status_label.config(
-                    text=(
-                        "All ships placed. "
-                        "You can now click READY."
-                    )
+                    text="Fleet deployed. Click READY."
+
                 )
 
             else:
@@ -1022,32 +1335,34 @@ class BattleshipGUI:
 
                 self.select_next_ship()
 
-        # ----------------------------------------------------
-        # SERVER REJECTED
-        # ----------------------------------------------------
-
         else:
-
-            self.status_label.config(
-                text=f"Placement rejected: {error}"
-            )
-
-            self.place_button.config(
-                state="normal"
-            )
 
             self.pending_ship = None
 
             self.pending_cells = []
 
-            messagebox.showerror(
-                "Placement Rejected",
+            self.place_button.config(
+                state="normal"
+            )
+
+            error_text = (
                 str(error)
+                if error
+                else "Unknown placement error"
+            )
+
+            self.status_label.config(
+                text=f"Deployment rejected: {error_text}"
+            )
+
+            messagebox.showerror(
+                "Deployment Rejected",
+                error_text
             )
 
 
     # ========================================================
-    # SELECT NEXT UNPLACED SHIP
+    # SELECT NEXT SHIP
     # ========================================================
 
     def select_next_ship(self):
@@ -1070,37 +1385,19 @@ class BattleshipGUI:
     def ready(self):
 
         if not self.connected:
-
-            messagebox.showwarning(
-                "Not Connected",
-                "Connect to the server first."
-            )
-
             return
-
-        # ----------------------------------------------------
-        # IMPORTANT CHECK
-        # ----------------------------------------------------
 
         if len(self.placed_ships) != len(SHIPS):
 
             messagebox.showwarning(
-                "Ships Missing",
-                (
-                    "You must successfully place "
-                    "all 3 ships first."
-                )
+                "Fleet Not Ready",
+                "Deploy all 3 ships first."
             )
 
             return
 
         if self.ready_sent:
-
             return
-
-        # ----------------------------------------------------
-        # SEND READY
-        # ----------------------------------------------------
 
         self.ready_sent = True
 
@@ -1109,10 +1406,32 @@ class BattleshipGUI:
         )
 
         self.status_label.config(
-            text="Sending READY to server..."
+            text="Fleet locked. Sending READY to server..."
         )
 
-        self.client.ready()
+        self.placement_label.config(
+            text="FLEET LOCKED • WAITING FOR ENEMY"
+        )
+
+        try:
+
+            self.client.ready()
+
+        except Exception as e:
+
+            self.ready_sent = False
+
+            self.ready_button.config(
+                state="normal"
+            )
+
+            self.status_label.config(
+                text="Could not send READY."
+            )
+
+            self.network_log(
+                f"READY error: {e}"
+            )
 
 
     # ========================================================
@@ -1142,17 +1461,11 @@ class BattleshipGUI:
         if success:
 
             self.status_label.config(
-                text=(
-                    "READY accepted. "
-                    "Waiting for opponent..."
-                )
+                text="READY confirmed by server."
             )
 
             self.placement_label.config(
-                text=(
-                    "You are ready. "
-                    "Waiting for the other player."
-                )
+                text="FLEET LOCKED • WAITING FOR ENEMY"
             )
 
         else:
@@ -1163,13 +1476,19 @@ class BattleshipGUI:
                 state="normal"
             )
 
+            error_text = (
+                str(error)
+                if error
+                else "Unknown READY error"
+            )
+
             self.status_label.config(
-                text=f"READY rejected: {error}"
+                text=f"READY rejected: {error_text}"
             )
 
             messagebox.showerror(
                 "READY Rejected",
-                str(error)
+                error_text
             )
 
 
@@ -1189,14 +1508,6 @@ class BattleshipGUI:
 
         self.game_started = True
 
-        self.status_label.config(
-            text="Game started!"
-        )
-
-        self.placement_label.config(
-            text="All ships locked. Attack the opponent."
-        )
-
         self.place_button.config(
             state="disabled"
         )
@@ -1205,16 +1516,22 @@ class BattleshipGUI:
             state="disabled"
         )
 
-        self.ship_menu.config(
-            state="disabled"
+        self.status_label.config(
+            text="Battle stations active!"
         )
 
-        self.orientation_menu.config(
-            state="disabled"
+        self.placement_label.config(
+            text="FLEET LOCKED • BATTLE IN PROGRESS"
         )
 
         self.turn_label.config(
-            text="Game started. Waiting for turn..."
+            text="BATTLE STARTED",
+            fg=TEAL
+        )
+
+        self.turn_subtitle.config(
+            text="Awaiting turn assignment...",
+            fg=MUTED
         )
 
 
@@ -1243,27 +1560,42 @@ class BattleshipGUI:
 
         if player == self.player_id:
 
+            self.turn_frame.config(
+                highlightbackground=TEAL
+            )
+
             self.turn_label.config(
-                text="YOUR TURN"
+                text="YOUR TURN",
+                fg=TEAL
+            )
+
+            self.turn_subtitle.config(
+                text="Choose a target on the enemy fleet.",
+                fg=TEAL_LIGHT
             )
 
             self.status_label.config(
-                text=(
-                    "Your turn. "
-                    "Click a cell on the opponent board."
-                )
+                text="Select an enemy cell to attack."
             )
 
         else:
 
+            self.turn_frame.config(
+                highlightbackground=GRID
+            )
+
             self.turn_label.config(
-                text=f"{player}'s TURN"
+                text="ENEMY'S TURN",
+                fg=WARNING
+            )
+
+            self.turn_subtitle.config(
+                text="Stand by... waiting for enemy attack.",
+                fg=MUTED
             )
 
             self.status_label.config(
-                text=(
-                    "Waiting for your opponent..."
-                )
+                text="Enemy is choosing a target..."
             )
 
 
@@ -1278,18 +1610,13 @@ class BattleshipGUI:
 
         if not self.game_started:
 
-            messagebox.showwarning(
-                "Game Not Started",
-                "The game has not started yet."
-            )
-
             return
 
         if self.current_turn != self.player_id:
 
             messagebox.showwarning(
-                "Not Your Turn",
-                "Wait for your opponent's turn."
+                "Enemy's Turn",
+                "Wait until it is your turn."
             )
 
             return
@@ -1297,28 +1624,36 @@ class BattleshipGUI:
         if cell in self.enemy_cells:
 
             messagebox.showwarning(
-                "Already Fired",
+                "Already Targeted",
                 f"You already fired at {cell}."
             )
 
             return
 
         confirm = messagebox.askyesno(
-            "Confirm Attack",
-            f"Fire at {cell}?"
+            "Confirm Strike",
+            f"Fire at enemy position {cell}?"
         )
 
         if not confirm:
 
             return
 
-        self.client.fire(
-            cell
-        )
+        try:
+
+            self.client.fire(
+                cell
+            )
+
+        except Exception as e:
+
+            self.network_log(
+                f"Fire error: {e}"
+            )
 
 
     # ========================================================
-    # SHOT RESULT
+    # FIRE RESULT
     # ========================================================
 
     def handle_result(
@@ -1349,12 +1684,14 @@ class BattleshipGUI:
             self.enemy_cells[cell] = "HIT"
 
             self.enemy_board[cell].config(
-                text="X",
+                text="✦",
+                fg=HIT,
+                bg="#351C29",
                 state="disabled"
             )
 
             self.status_label.config(
-                text=f"HIT at {cell}!"
+                text=f"DIRECT HIT at {cell}!"
             )
 
         elif result == "MISS":
@@ -1362,7 +1699,9 @@ class BattleshipGUI:
             self.enemy_cells[cell] = "MISS"
 
             self.enemy_board[cell].config(
-                text="O",
+                text="~",
+                fg=MISS,
+                bg="#102E42",
                 state="disabled"
             )
 
@@ -1372,8 +1711,14 @@ class BattleshipGUI:
 
         elif result == "INVALID":
 
+            error_text = (
+                str(error)
+                if error
+                else "Invalid target"
+            )
+
             self.status_label.config(
-                text=f"Invalid shot: {error}"
+                text=f"Invalid strike: {error_text}"
             )
 
 
@@ -1401,29 +1746,37 @@ class BattleshipGUI:
         cell
     ):
 
+        if cell not in self.own_board:
+
+            return
+
         if result == "HIT":
 
             self.own_board[cell].config(
-                text="X"
+                text="✦",
+                fg=HIT,
+                bg="#351C29"
             )
 
             self.status_label.config(
-                text=f"Your ship was hit at {cell}."
+                text=f"WARNING • Your fleet was hit at {cell}!"
             )
 
         elif result == "MISS":
 
             self.own_board[cell].config(
-                text="O"
+                text="~",
+                fg=MISS,
+                bg="#102E42"
             )
 
             self.status_label.config(
-                text=f"Opponent missed at {cell}."
+                text=f"Enemy attack missed at {cell}."
             )
 
 
     # ========================================================
-    # SHIP SUNK
+    # SUNK
     # ========================================================
 
     def handle_sunk(
@@ -1444,12 +1797,12 @@ class BattleshipGUI:
     ):
 
         self.status_label.config(
-            text=f"You sunk {ship}!"
+            text=f"TARGET DESTROYED • {ship} SUNK"
         )
 
 
     # ========================================================
-    # YOUR SHIP HIT
+    # SHIP HIT
     # ========================================================
 
     def handle_ship_hit(
@@ -1470,7 +1823,7 @@ class BattleshipGUI:
     ):
 
         self.status_label.config(
-            text=f"Your {ship} was hit!"
+            text=f"WARNING • YOUR {ship} HAS BEEN HIT"
         )
 
 
@@ -1499,17 +1852,27 @@ class BattleshipGUI:
 
         self.current_turn = None
 
+        self.turn_frame.config(
+            highlightbackground=SUCCESS
+        )
+
         self.turn_label.config(
-            text="YOU WIN!"
+            text="VICTORY",
+            fg=SUCCESS
+        )
+
+        self.turn_subtitle.config(
+            text="Enemy fleet destroyed.",
+            fg=SUCCESS
         )
 
         self.status_label.config(
-            text="Congratulations! You won!"
+            text="MISSION COMPLETE • YOU WIN"
         )
 
         messagebox.showinfo(
-            "Game Over",
-            "YOU WIN!"
+            "VICTORY",
+            "Enemy fleet destroyed!\n\nYOU WIN!"
         )
 
 
@@ -1531,17 +1894,27 @@ class BattleshipGUI:
 
         self.current_turn = None
 
+        self.turn_frame.config(
+            highlightbackground=HIT
+        )
+
         self.turn_label.config(
-            text="YOU LOSE"
+            text="DEFEAT",
+            fg=HIT
+        )
+
+        self.turn_subtitle.config(
+            text="Your fleet has been destroyed.",
+            fg=HIT
         )
 
         self.status_label.config(
-            text="Your opponent won the game."
+            text="MISSION FAILED • ENEMY WINS"
         )
 
         messagebox.showinfo(
-            "Game Over",
-            "YOU LOSE!"
+            "DEFEAT",
+            "Your fleet has been destroyed.\n\nYOU LOSE!"
         )
 
 
@@ -1567,12 +1940,12 @@ class BattleshipGUI:
     ):
 
         self.status_label.config(
-            text=f"Server error: {error}"
+            text=f"SERVER ERROR: {error}"
         )
 
 
     # ========================================================
-    # CLOSE APPLICATION
+    # CLOSE
     # ========================================================
 
     def close(self):
@@ -1601,4 +1974,3 @@ if __name__ == "__main__":
     )
 
     root.mainloop()
-
