@@ -258,6 +258,31 @@ class BattleshipGUI:
             ipady=5
         )
 
+        tk.Label(
+            connection_frame,
+            text="Server IP:"
+        ).grid(
+            row=0,
+            column=2,
+            padx=5
+        )
+
+        self.server_ip_entry = tk.Entry(
+            connection_frame,
+            width=18
+        )
+
+        self.server_ip_entry.insert(
+            0,
+            "127.0.0.1"
+        )
+
+        self.server_ip_entry.grid(
+            row=0,
+            column=3,
+            padx=5
+        )
+
         self.connect_button = tk.Button(
             connection_inner,
             text="CONNECT",
@@ -274,8 +299,7 @@ class BattleshipGUI:
         self.connect_button.grid(
             row=0,
             column=2,
-            padx=10,
-            ipady=3
+            padx=5
         )
 
         self.player_label = tk.Label(
@@ -289,21 +313,7 @@ class BattleshipGUI:
         self.player_label.grid(
             row=0,
             column=3,
-            padx=20
-        )
-
-        self.connection_status = tk.Label(
-            connection_inner,
-            text="● OFFLINE",
-            font=("Arial", 10, "bold"),
-            fg=MUTED,
-            bg=PANEL
-        )
-
-        self.connection_status.grid(
-            row=0,
-            column=4,
-            padx=10
+            padx=15
         )
 
         # ====================================================
@@ -877,6 +887,7 @@ class BattleshipGUI:
     def connect(self):
 
         name = self.name_entry.get().strip()
+        server_ip = self.server_ip_entry.get().strip()
 
         if not name:
 
@@ -887,8 +898,8 @@ class BattleshipGUI:
 
             return
 
-        self.connect_button.config(
-            state="disabled"
+        self.status_label.config(
+            text="Connecting to UDP server..."
         )
 
         self.name_entry.config(
