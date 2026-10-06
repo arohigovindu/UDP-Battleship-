@@ -23,9 +23,6 @@ class BattleshipClient:
             socket.SOCK_DGRAM
         )
 
-        # Timeout allows the client to periodically
-        # check whether it should continue running.
-
         self.socket.settimeout(0.5)
 
         # -------------------------------------------------
@@ -33,15 +30,11 @@ class BattleshipClient:
         # -------------------------------------------------
 
         self.player_id = None
-
         self.player_name = None
 
         self.connected = False
-
         self.game_started = False
-
         self.current_turn = None
-
         self.running = False
 
         # -------------------------------------------------
@@ -57,32 +50,29 @@ class BattleshipClient:
         self.message_callback = None
 
         # -------------------------------------------------
+        # NETWORK ANIMATION CALLBACKS
+        # -------------------------------------------------
+
+        self.on_network_send = None
+        self.on_network_receive = None
+
+        # -------------------------------------------------
         # EVENT CALLBACKS
         # -------------------------------------------------
 
         self.on_welcome = None
-
         self.on_place_result = None
-
         self.on_ready_result = None
-
         self.on_game_start = None
-
         self.on_turn = None
-
         self.on_result = None
-
         self.on_attack = None
-
         self.on_sunk = None
-
         self.on_ship_hit = None
-
         self.on_win = None
-
         self.on_lose = None
-
         self.on_error = None
+        self.on_reset = None
 
         # -------------------------------------------------
         # CONNECTION LOCK
@@ -125,8 +115,8 @@ class BattleshipClient:
         self.running = False
 
         self.connected = False
-
         self.game_started = False
+        self.current_turn = None
 
         try:
             self.socket.close()
@@ -154,6 +144,14 @@ class BattleshipClient:
             self._log(
                 f"{message} -> UDP -> Server"
             )
+
+            # Trigger packet animation
+            if self.on_network_send:
+
+                try:
+                    self.on_network_send(message)
+                except Exception:
+                    pass
 
             return True
 
@@ -194,9 +192,6 @@ class BattleshipClient:
 
         self.player_name = player_name
 
-        # Start receiver before JOIN so that the
-        # WELCOME response cannot be missed.
-
         self.start_receiver()
 
         self._log(
@@ -224,7 +219,6 @@ class BattleshipClient:
     ):
 
         start_cell = start_cell.upper()
-
         orientation = orientation.upper()
 
         message = (
@@ -267,6 +261,26 @@ class BattleshipClient:
         return self._send(
             f"FIRE|{cell}"
         )
+
+    # =====================================================
+    # RESET GAME
+    # =====================================================
+
+    def reset_game(self):
+
+        if not self.connected:
+
+            self._log(
+                "Cannot reset: not connected to server."
+            )
+
+            return False
+
+        self._log(
+            "Requesting game reset..."
+        )
+
+        return self._send("RESET")
 
     # =====================================================
     # RECEIVE LOOP
@@ -316,6 +330,14 @@ class BattleshipClient:
                 f"<- Server: {message}"
             )
 
+            # Trigger packet animation
+            if self.on_network_receive:
+
+                try:
+                    self.on_network_receive(message)
+                except Exception:
+                    pass
+
             # -------------------------------------------------
             # PROCESS MESSAGE
             # -------------------------------------------------
@@ -355,7 +377,6 @@ class BattleshipClient:
                 return
 
             self.player_id = parts[1]
-
             self.connected = True
 
             self._log(
@@ -503,7 +524,6 @@ class BattleshipClient:
                 return
 
             result = parts[1]
-
             cell = parts[2]
 
             error = (
@@ -549,7 +569,6 @@ class BattleshipClient:
                 return
 
             result = parts[1]
-
             cell = parts[2]
 
             self._log(
@@ -622,7 +641,6 @@ class BattleshipClient:
             )
 
             self.current_turn = None
-
             self.game_started = False
 
             self._log(
@@ -643,7 +661,6 @@ class BattleshipClient:
         elif command == "LOSE":
 
             self.current_turn = None
-
             self.game_started = False
 
             self._log(
@@ -653,6 +670,31 @@ class BattleshipClient:
             if self.on_lose:
 
                 self.on_lose()
+
+        # =================================================
+        # RESET
+        # =================================================
+
+        elif command == "RESET":
+
+            status = (
+                parts[1]
+                if len(parts) >= 2
+                else "OK"
+            )
+
+            if status == "OK":
+
+                self.game_started = False
+                self.current_turn = None
+
+                self._log(
+                    "Server reset the game."
+                )
+
+                if self.on_reset:
+
+                    self.on_reset()
 
         # =================================================
         # ERROR
@@ -714,171 +756,79 @@ if __name__ == "__main__":
 
     client = BattleshipClient()
 
-    # ---------------------------------------------------------
-    # CALLBACKS
-    # ---------------------------------------------------------
-
     def welcome(player_id):
+        print(f"\nAssigned as {player_id}")
 
-        print(
-            f"\nAssigned as {player_id}"
-        )
-
-
-    def placement_result(
-        success,
-        error
-    ):
+    def placement_result(success, error):
 
         if success:
-
-            print(
-                "Placement accepted."
-            )
-
+            print("Placement accepted.")
         else:
+            print(f"Placement rejected: {error}")
 
-            print(
-                f"Placement rejected: "
-                f"{error}"
-            )
-
-
-    def ready_result(
-        success,
-        error
-    ):
+    def ready_result(success, error):
 
         if success:
-
-            print(
-                "READY accepted."
-            )
-
+            print("READY accepted.")
         else:
-
-            print(
-                f"READY rejected: "
-                f"{error}"
-            )
-
+            print(f"READY rejected: {error}")
 
     def game_start():
-
-        print(
-            "\nGame started!"
-        )
-
+        print("\nGame started!")
 
     def turn(player):
+        print(f"\nCurrent turn: {player}")
 
-        print(
-            f"\nCurrent turn: {player}"
-        )
-
-
-    def result(
-        result_type,
-        cell,
-        error
-    ):
+    def result(result_type, cell, error):
 
         print(
             f"\nShot result: "
-            f"{result_type} "
-            f"at {cell}"
+            f"{result_type} at {cell}"
         )
 
         if error:
+            print(f"Error: {error}")
 
-            print(
-                f"Error: {error}"
-            )
-
-
-    def attack(
-        result_type,
-        cell
-    ):
+    def attack(result_type, cell):
 
         print(
             f"\nOpponent attack: "
             f"{result_type} at {cell}"
         )
 
-
     def sunk(ship):
-
-        print(
-            f"\nShip sunk: {ship}"
-        )
-
+        print(f"\nShip sunk: {ship}")
 
     def ship_hit(ship):
-
-        print(
-            f"\nYour ship was hit: {ship}"
-        )
-
+        print(f"\nYour ship was hit: {ship}")
 
     def win(player):
-
-        print(
-            f"\nYOU WIN! Winner: {player}"
-        )
-
+        print(f"\nYOU WIN! Winner: {player}")
 
     def lose():
+        print("\nYOU LOSE!")
 
-        print(
-            "\nYOU LOSE!"
-        )
-
+    def reset():
+        print("\nGAME RESET!")
 
     def error(message):
-
-        print(
-            f"\nSERVER ERROR: {message}"
-        )
-
-
-    # ---------------------------------------------------------
-    # CONNECT CALLBACKS
-    # ---------------------------------------------------------
+        print(f"\nSERVER ERROR: {message}")
 
     client.on_welcome = welcome
-
     client.on_place_result = placement_result
-
     client.on_ready_result = ready_result
-
     client.on_game_start = game_start
-
     client.on_turn = turn
-
     client.on_result = result
-
     client.on_attack = attack
-
     client.on_sunk = sunk
-
     client.on_ship_hit = ship_hit
-
     client.on_win = win
-
     client.on_lose = lose
-
+    client.on_reset = reset
     client.on_error = error
 
-    # ---------------------------------------------------------
-    # CONNECT
-    # ---------------------------------------------------------
-
     client.connect(name)
-
-    # ---------------------------------------------------------
-    # KEEP TERMINAL CLIENT ALIVE
-    # ---------------------------------------------------------
 
     try:
 
@@ -888,8 +838,6 @@ if __name__ == "__main__":
 
     except KeyboardInterrupt:
 
-        print(
-            "\nStopping client..."
-        )
+        print("\nStopping client...")
 
         client.stop()
